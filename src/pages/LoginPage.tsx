@@ -3,6 +3,7 @@ import type { FormEvent } from "react";
 import { useEffect, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/auth/AuthContext";
+import { BrandLogo } from "@/components/BrandLogo";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -39,20 +40,23 @@ export function LoginPage() {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center p-4">
-      <Card className="w-full max-w-md">
+    <div className="relative flex min-h-screen items-center justify-center p-4">
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(70%_40%_at_50%_0%,hsl(var(--primary)/0.2),transparent)]" />
+      <Card className="w-full max-w-md border-border/70 bg-card/90 shadow-xl backdrop-blur">
         <CardHeader className="text-center">
-          <CardTitle className="text-xl">Yakuza Meta</CardTitle>
-          <CardDescription>Iniciá sesión para cargar pedidos</CardDescription>
+          <BrandLogo subtitle="Portal de pedidos de meta" />
+          <CardTitle className="pt-2 text-xl">Bienvenido de nuevo</CardTitle>
+          <CardDescription>Ingresá con tu correo y contraseña para crear y seguir tus pedidos.</CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={onSubmit} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="email">Correo</Label>
+              <Label htmlFor="email">Correo electronico</Label>
               <Input
                 id="email"
                 type="email"
                 autoComplete="email"
+                placeholder="tuemail@ejemplo.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
@@ -65,6 +69,7 @@ export function LoginPage() {
                 id="password"
                 type="password"
                 autoComplete="current-password"
+                placeholder="Tu contraseña"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
@@ -79,7 +84,7 @@ export function LoginPage() {
                   Entrando…
                 </>
               ) : (
-                "Entrar"
+                "Iniciar sesion"
               )}
             </Button>
           </form>

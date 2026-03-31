@@ -37,7 +37,6 @@ export function NewOrderPage() {
   const [profileLoading, setProfileLoading] = useState(true);
 
   const [kg, setKg] = useState("");
-  const [fechaPedido, setFechaPedido] = useState(todayIsoDate);
   const [fechaEncargo, setFechaEncargo] = useState("");
   const [notas, setNotas] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -120,9 +119,20 @@ export function NewOrderPage() {
     }
     const nombre = portalClienteNombre(profile);
     if (!nombre) {
-      setError("Tu perfil no tiene nombre de solicitante válido.");
+      setError("Tu perfil no tiene un nombre de cliente válido.");
       return;
     }
+    const fechaPedido = todayIsoDate();
+    const resumen = [
+      `Cliente: ${nombre}`,
+      `Kilos: ${kgNum}`,
+      `Bolsas estimadas: ${bolsas ?? "-"}`,
+      `Fecha del pedido: ${fechaPedido}`,
+      `Fecha de entrega: ${fechaEncargo.trim() === "" ? "Sin especificar" : fechaEncargo}`,
+      `Notas: ${notas.trim() === "" ? "Sin notas" : notas.trim()}`,
+    ].join("\n");
+    const confirmar = window.confirm(`Confirmá el pedido con estos datos:\n\n${resumen}`);
+    if (!confirmar) return;
 
     setSaving(true);
     try {
@@ -145,11 +155,11 @@ export function NewOrderPage() {
     !!user && !!profile && !profileLoading && Number.isFinite(kgNum) && kgNum > 0 && !saving;
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Nuevo pedido</CardTitle>
-        <CardDescription>
-          El solicitante es siempre tu cuenta. El total es una estimación con el precio vigente por tramo de kilos.
+    <Card className="border-border/70 bg-card/90 shadow-lg backdrop-blur">
+      <CardHeader className="space-y-2 text-center">
+        <CardTitle className="text-4xl font-bold tracking-tight">Nuevo pedido</CardTitle>
+        <CardDescription className="mx-auto max-w-2xl text-base">
+          Cargá los datos del pedido. El cliente se toma de tu cuenta y el total se calcula con la tarifa vigente.
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -161,11 +171,13 @@ export function NewOrderPage() {
         ) : profileError ? (
           <p className="text-sm text-destructive">{profileError}</p>
         ) : (
-          <form onSubmit={onSubmit} className="space-y-4">
+          <form onSubmit={onSubmit} className="space-y-6">
             <div className="space-y-2">
-              <Label htmlFor="cliente">Solicitante (tu cuenta)</Label>
-              <Input id="cliente" value={clienteNombreFijo} readOnly disabled className="opacity-90" />
-              <p className="text-xs text-muted-foreground">No editable: coincide con tu perfil.</p>
+              <Label>Cliente</Label>
+              <p className="rounded-md border border-border/80 bg-background/40 px-3 py-2.5 text-base font-medium text-foreground">
+                {clienteNombreFijo}
+              </p>
+              <p className="text-xs text-muted-foreground">Dato autocompletado desde tu perfil.</p>
             </div>
             <div className="grid gap-4 sm:grid-cols-2">
               <div className="space-y-2">
@@ -175,24 +187,24 @@ export function NewOrderPage() {
                   inputMode="decimal"
                   value={kg}
                   onChange={(e) => setKg(e.target.value)}
-                  placeholder="Ej. 2.5"
+                  placeholder="Ejemplo: 2"
                   required
                   disabled={saving}
                 />
                 {bolsas != null ? (
-                  <p className="text-xs text-muted-foreground">≈ {bolsas} bolsas ({BOLSAS_PER_KG_META} / kg)</p>
+                  <p className="text-xs text-muted-foreground">Estimado: {bolsas} bolsas ({BOLSAS_PER_KG_META} por kilo)</p>
                 ) : null}
               </div>
               <div className="space-y-2">
-                <Label htmlFor="fechaPedido">Fecha del pedido</Label>
+                <Label htmlFor="fechaEncargo">Fecha de entrega (opcional)</Label>
                 <Input
-                  id="fechaPedido"
+                  id="fechaEncargo"
                   type="date"
-                  value={fechaPedido}
-                  onChange={(e) => setFechaPedido(e.target.value)}
-                  required
+                  value={fechaEncargo}
+                  onChange={(e) => setFechaEncargo(e.target.value)}
                   disabled={saving}
                 />
+                <p className="text-xs text-muted-foreground">Indicá el día en que querés recibir la meta.</p>
               </div>
             </div>
 
@@ -221,30 +233,29 @@ export function NewOrderPage() {
             ) : null}
 
             <div className="space-y-2">
-              <Label htmlFor="fechaEncargo">Fecha de encargo (opcional)</Label>
-              <Input
-                id="fechaEncargo"
-                type="date"
-                value={fechaEncargo}
-                onChange={(e) => setFechaEncargo(e.target.value)}
+              <Label htmlFor="notas">Notas (opcional)</Label>
+              <Textarea
+                id="notas"
+                value={notas}
+                onChange={(e) => setNotas(e.target.value)}
                 disabled={saving}
+                rows={3}
+                placeholder="Ej: numero de telefono, referencia de entrega, etc."
               />
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="notas">Notas (opcional)</Label>
-              <Textarea id="notas" value={notas} onChange={(e) => setNotas(e.target.value)} disabled={saving} rows={3} />
-            </div>
             {error ? <p className="text-sm text-destructive">{error}</p> : null}
-            <Button type="submit" disabled={!canSubmit} className="w-full sm:w-auto">
-              {saving ? (
-                <>
-                  <Loader2 className="animate-spin" />
-                  Guardando…
-                </>
-              ) : (
-                "Crear pedido"
-              )}
-            </Button>
+            <div className="flex justify-center">
+              <Button type="submit" disabled={!canSubmit} className="h-12 w-full text-base font-semibold">
+                {saving ? (
+                  <>
+                    <Loader2 className="animate-spin" />
+                    Guardando…
+                  </>
+                ) : (
+                  "Crear pedido"
+                )}
+              </Button>
+            </div>
           </form>
         )}
       </CardContent>

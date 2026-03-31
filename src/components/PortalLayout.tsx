@@ -1,6 +1,7 @@
 import { ClipboardList, LogOut, PackagePlus } from "lucide-react";
 import { NavLink, Outlet } from "react-router-dom";
 import { useAuth } from "@/auth/AuthContext";
+import { BrandLogo } from "@/components/BrandLogo";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
@@ -15,9 +16,9 @@ export function PortalLayout() {
 
   return (
     <div className="min-h-screen flex flex-col">
-      <header className="border-b border-border bg-card/50 backdrop-blur-sm sticky top-0 z-10">
-        <div className="mx-auto flex max-w-2xl items-center justify-between gap-4 px-4 py-3">
-          <span className="text-sm font-semibold text-foreground">Yakuza Meta</span>
+      <header className="sticky top-0 z-10 border-b border-border bg-background/70 backdrop-blur-md">
+        <div className="mx-auto flex max-w-3xl items-center justify-between gap-4 px-4 py-3">
+          <BrandLogo compact />
           <nav className="flex items-center gap-1">
             <NavLink to="/pedido/nuevo" className={navClass} end>
               <PackagePlus className="size-4" />
@@ -39,7 +40,7 @@ export function PortalLayout() {
           </div>
         </div>
       </header>
-      <main className="mx-auto w-full max-w-2xl flex-1 p-4">
+      <main className="mx-auto w-full max-w-3xl flex-1 p-4 sm:p-6">
         <Outlet />
       </main>
     </div>
