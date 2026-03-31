@@ -8,7 +8,9 @@
     "build": "tsc -b && vite build",
     "preview": "vite preview",
     "predeploy": "npm run build",
-    "deploy": "gh-pages -d dist"
+    "gh-pages:clean": "gh-pages-clean",
+    "deploy": "gh-pages -d dist --nojekyll",
+    "deploy:add-only": "gh-pages -d dist --nojekyll --add"
   },
   "dependencies": {
     "@radix-ui/react-label": "^2.1.1",
