@@ -138,6 +138,7 @@ export function NewOrderPage() {
     try {
       await createOrder({
         cliente_nombre: nombre,
+        cliente_para_notificacion: profile.display_name?.trim() || profile.username,
         cantidad_meta_kilos: kgNum,
         fecha_pedido: fechaPedido,
         fecha_encargo: fechaEncargo.trim() === "" ? null : fechaEncargo,

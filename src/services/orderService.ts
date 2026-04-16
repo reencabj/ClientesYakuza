@@ -26,6 +26,8 @@ export async function createOrder(input: {
   fecha_pedido: string;
   fecha_encargo: string | null;
   notas: string | null;
+  /** Para Discord: display_name o username; si falta, se usa cliente_nombre del pedido. */
+  cliente_para_notificacion?: string | null;
 }): Promise<string> {
   const { data, error } = await supabase.rpc("create_order", {
     p_cliente_nombre: input.cliente_nombre,
@@ -35,6 +37,27 @@ export async function createOrder(input: {
     p_notas: input.notas,
   });
   if (error) throw error;
+
+  const clienteDiscord = (
+    input.cliente_para_notificacion?.trim() ||
+    input.cliente_nombre
+  ).trim();
+
+  try {
+    const { error: notifyError } = await supabase.functions.invoke("notify-discord", {
+      body: {
+        tipo_evento: "nuevo_pedido",
+        cliente: clienteDiscord,
+        kilos: input.cantidad_meta_kilos,
+      },
+    });
+    if (notifyError) {
+      console.error("Error notificando Discord:", notifyError);
+    }
+  } catch (err) {
+    console.error("Error notificando Discord:", err);
+  }
+
   return data as string;
 }
 
