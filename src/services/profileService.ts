@@ -3,12 +3,13 @@ import { supabase } from "@/lib/supabase";
 export type PortalProfile = {
   username: string;
   display_name: string | null;
+  role: "admin" | "user" | "cliente" | "cliente_vip";
 };
 
 export async function fetchMyProfile(userId: string): Promise<PortalProfile> {
   const { data, error } = await supabase
     .from("profiles")
-    .select("username, display_name")
+    .select("username, display_name, role")
     .eq("id", userId)
     .single();
   if (error) throw error;

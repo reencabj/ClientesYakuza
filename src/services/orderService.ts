@@ -1,8 +1,17 @@
 import { supabase } from "@/lib/supabase";
 
-export async function previewSuggestedOrderTotal(kg: number): Promise<{ precioPorKg: number; total: number }> {
+export type TipoClientePedido = "normal" | "vip";
+export type TipoPagoPedido = "blanco" | "negro";
+
+export async function previewSuggestedOrderTotal(
+  kg: number,
+  tipoCliente: TipoClientePedido,
+  tipoPago: TipoPagoPedido
+): Promise<{ precioPorKg: number; total: number }> {
   const { data, error } = await supabase.rpc("resolve_suggested_price_per_kg", {
     p_cantidad_meta_kilos: kg,
+    p_tipo_cliente: tipoCliente,
+    p_tipo_pago: tipoPago,
   });
   if (error) throw error;
   const precioPorKg = Number(data);
@@ -26,6 +35,8 @@ export async function createOrder(input: {
   fecha_pedido: string;
   fecha_encargo: string | null;
   notas: string | null;
+  tipo_cliente: TipoClientePedido;
+  tipo_pago: TipoPagoPedido;
   /** Para Discord: display_name o username; si falta, se usa cliente_nombre del pedido. */
   cliente_para_notificacion?: string | null;
 }): Promise<string> {
@@ -35,6 +46,10 @@ export async function createOrder(input: {
     p_fecha_pedido: input.fecha_pedido,
     p_fecha_encargo: input.fecha_encargo,
     p_notas: input.notas,
+    p_origen_pedido: "portal_clientes",
+    p_tipo_cliente: input.tipo_cliente,
+    p_tipo_pago: input.tipo_pago,
+    p_vip_client_id: null,
   });
   if (error) throw error;
 

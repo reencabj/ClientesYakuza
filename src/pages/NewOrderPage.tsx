@@ -4,7 +4,12 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/auth/AuthContext";
 import { BOLSAS_PER_KG_META } from "@/lib/meta-bags";
-import { createOrder, previewSuggestedOrderTotal } from "@/services/orderService";
+import {
+  createOrder,
+  previewSuggestedOrderTotal,
+  type TipoClientePedido,
+  type TipoPagoPedido,
+} from "@/services/orderService";
 import {
   fetchMyProfile,
   portalClienteNombre,
@@ -37,6 +42,7 @@ export function NewOrderPage() {
   const [profileLoading, setProfileLoading] = useState(true);
 
   const [kg, setKg] = useState("");
+  const [tipoPago, setTipoPago] = useState<TipoPagoPedido>("blanco");
   const [fechaEncargo, setFechaEncargo] = useState("");
   const [notas, setNotas] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -66,6 +72,12 @@ export function NewOrderPage() {
   }, [user?.id]);
 
   const clienteNombreFijo = useMemo(() => (profile ? portalClienteNombre(profile) : ""), [profile]);
+  const tipoCliente = useMemo<TipoClientePedido>(
+    () => (profile?.role === "cliente_vip" ? "vip" : "normal"),
+    [profile?.role]
+  );
+  const tipoClienteLabel = tipoCliente === "vip" ? "VIP" : "Cliente";
+  const tipoPagoLabel = tipoPago === "blanco" ? "En blanco" : "En negro";
 
   const kgNum = useMemo(() => parseFloat(kg.replace(",", ".")), [kg]);
   const bolsas = useMemo(() => {
@@ -86,7 +98,7 @@ export function NewOrderPage() {
     setPreviewError(null);
 
     const t = window.setTimeout(() => {
-      void previewSuggestedOrderTotal(kgNum)
+      void previewSuggestedOrderTotal(kgNum, tipoCliente, tipoPago)
         .then((p) => {
           if (previewSeq.current !== seq) return;
           setPreview(p);
@@ -104,7 +116,7 @@ export function NewOrderPage() {
     }, 280);
 
     return () => window.clearTimeout(t);
-  }, [kgNum]);
+  }, [kgNum, tipoCliente, tipoPago]);
 
   async function onSubmit(e: FormEvent) {
     e.preventDefault();
@@ -125,6 +137,8 @@ export function NewOrderPage() {
     const fechaPedido = todayIsoDate();
     const resumen = [
       `Cliente: ${nombre}`,
+      `Tipo de cliente: ${tipoClienteLabel}`,
+      `Tipo de pago: ${tipoPagoLabel}`,
       `Kilos: ${kgNum}`,
       `Bolsas estimadas: ${bolsas ?? "-"}`,
       `Fecha del pedido: ${fechaPedido}`,
@@ -140,6 +154,8 @@ export function NewOrderPage() {
         cliente_nombre: nombre,
         cliente_para_notificacion: profile.display_name?.trim() || profile.username,
         cantidad_meta_kilos: kgNum,
+        tipo_cliente: tipoCliente,
+        tipo_pago: tipoPago,
         fecha_pedido: fechaPedido,
         fecha_encargo: fechaEncargo.trim() === "" ? null : fechaEncargo,
         notas: notas.trim() === "" ? null : notas.trim(),
@@ -179,6 +195,39 @@ export function NewOrderPage() {
                 {clienteNombreFijo}
               </p>
               <p className="text-xs text-muted-foreground">Dato autocompletado desde tu perfil.</p>
+            </div>
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div className="space-y-2">
+                <Label>Tipo de cliente</Label>
+                <p className="rounded-md border border-border/80 bg-background/40 px-3 py-2.5 text-base font-medium text-foreground">
+                  {tipoClienteLabel}
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  Definido por tu rol ({profile?.role === "cliente_vip" ? "cliente_vip" : "cliente"}).
+                </p>
+              </div>
+              <div className="space-y-2">
+                <Label>Tipo de pago</Label>
+                <div className="grid grid-cols-2 gap-2">
+                  <Button
+                    type="button"
+                    variant={tipoPago === "blanco" ? "default" : "outline"}
+                    disabled={saving}
+                    onClick={() => setTipoPago("blanco")}
+                  >
+                    EN BLANCO
+                  </Button>
+                  <Button
+                    type="button"
+                    variant={tipoPago === "negro" ? "default" : "outline"}
+                    disabled={saving}
+                    onClick={() => setTipoPago("negro")}
+                  >
+                    EN NEGRO
+                  </Button>
+                </div>
+                <p className="text-xs text-muted-foreground">Elegí cómo querés cotizar este pedido.</p>
+              </div>
             </div>
             <div className="grid gap-4 sm:grid-cols-2">
               <div className="space-y-2">
@@ -226,6 +275,10 @@ export function NewOrderPage() {
                     </p>
                     <p className="text-base font-semibold text-foreground">
                       Total estimado: {formatMoney(preview.total)}
+                    </p>
+                    <p className="text-muted-foreground">
+                      Tipo cliente: <span className="font-medium text-foreground">{tipoClienteLabel}</span> · Tipo pago:{" "}
+                      <span className="font-medium text-foreground">{tipoPagoLabel}</span>
                     </p>
                     <p className="text-xs text-muted-foreground">Se confirma al guardar el pedido (misma regla que el sistema).</p>
                   </div>
